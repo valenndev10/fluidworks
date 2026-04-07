@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil NACA 0012 — FLUIDWORKS</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#C45A2C">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">FLUIDWORKS</a>
+    <ul class="nav-links">
+      <li><a href="index.html#concepts">Conceptos</a></li>
+      <li><a href="project-airfoil.html" class="active">Perfil Alar</a></li>
+      <li><a href="project-tube.html">Tubo Finito</a></li>
+      <li><a href="project-flatplate.html">Placa Plana</a></li>
+      <li><a href="project-flatplate.html">Placa Plana</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- PROJECT HERO -->
+<div class="project-hero">
+  <div class="container">
+    <a href="index.html" class="back-link">← Volver al logbook</a>
+    <div class="pnum">01</div>
+    <h1>Simulación CFD del perfil NACA 0012</h1>
+    <p class="desc">
+      Simulación completa del flujo de aire alrededor de un perfil alar NACA 0012 en 2D. El proyecto abarcó tres enfoques: flujo laminar, flujo turbulento k-ε con barrido paramétrico del ángulo de ataque, y flujo potencial con implementación de la condición de Kutta.
+    </p>
+    <div class="meta">
+      <span class="meta-chip highlight">COMSOL Multiphysics</span>
+      <span class="meta-chip">2D Estacionario</span>
+      <span class="meta-chip">CFD Module</span>
+      <span class="meta-chip">Módulo de Matemática</span>
+      <span class="meta-chip">Re ≈ 3.4 × 10⁶</span>
+    </div>
+    <div class="toc">
+      <a href="#phase-a">Fase A · Laminar</a>
+      <span class="sep">·</span>
+      <a href="#phase-b">Fase B · Ángulo de ataque</a>
+      <span class="sep">·</span>
+      <a href="#phase-c">Fase C · Turbulento</a>
+      <span class="sep">·</span>
+      <a href="#phase-d">Fase D · Flujo potencial</a>
+      <span class="sep">·</span>
+      <a href="#errors">Errores</a>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<section style="padding-top: 2rem;">
+  <div class="container">
+
+    <!-- ═══ PHASE A: LAMINAR ═══ -->
+    <div id="phase-a" class="phase fade-in">
+      <div class="phase-label">▸ Fase A</div>
+      <h3 class="phase-title">Modelo laminar — primeros pasos</h3>
+      <p class="phase-desc">Configuración inicial con flujo laminar a baja velocidad para entender los fundamentos del flujo sobre el perfil.</p>
+
+      <div class="step" data-step="1">
+        <h4>Crear el modelo</h4>
+        <p>Nuevo modelo en blanco → dimensión del espacio: <strong>2D</strong>. Añadir la física <span class="code-inline">Flujo laminar (spf)</span>. Estudio: <strong>Estacionario</strong>.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Generar e importar las coordenadas del perfil</h4>
+        <p>Se generaron 161 puntos del perfil NACA 0012 (cuerda = 1 m) usando la fórmula de espesor NACA con espaciado coseno para capturar bien el borde de ataque. Los puntos se guardaron en un archivo <span class="code-inline">naca0012_coords.txt</span> con formato (x, y).</p>
+        <p>En COMSOL: <strong>Geometría → clic derecho → Curva de interpolación</strong>. Fuente de datos: <strong>Archivo</strong>, cargar el .txt. Activar <strong>"Curva cerrada"</strong>. Construir.</p>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Crear el dominio de fluido (túnel de viento)</h4>
+        <p>Geometría → <strong>Rectángulo</strong>:</p>
+        <ul>
+          <li>Anchura: <strong>20 m</strong>, Altura: <strong>10 m</strong></li>
+          <li>Posición base (esquina): x = <strong>−5</strong>, y = <strong>−5</strong></li>
+        </ul>
+        <p>Esto da 5 cuerdas por delante del perfil y 14 por detrás para capturar la estela.</p>
+      </div>
+
+      <div class="step" data-step="4">
+        <h4>Operación booleana: restar el perfil</h4>
+        <p>Geometría → <strong>Convertir a sólido</strong> (sobre la curva de interpolación). Luego <strong>Diferencia booleana</strong>: añadir el rectángulo, sustraer el sólido del perfil. Desmarcar "mantener contornos interiores". Construir todo.</p>
+        <div class="note">
+          <strong>Nota:</strong> Originalmente se intentó restar la curva directamente, pero COMSOL necesita un sólido cerrado para la operación booleana. Convertir a sólido primero resuelve el problema.
+        </div>
+      </div>
+
+      <div class="step" data-step="5">
+        <h4>Material</h4>
+        <p>Componente 1 → Materiales → <strong>Añadir material desde biblioteca → "Air"</strong>. Propiedades: ρ = 1.225 kg/m³, μ = 1.81×10⁻⁵ Pa·s.</p>
+      </div>
+
+      <div class="step" data-step="6">
+        <h4>Condiciones de contorno</h4>
+        <p>En el nodo <span class="code-inline">Flujo laminar (spf)</span>:</p>
+        <ul>
+          <li><strong>Entrada</strong> → borde izquierdo del rectángulo → Campo de velocidad: U₀x = <span class="code-inline">0.1 m/s</span>, U₀y = 0. (Velocidad baja para Re ≈ 6.770, compatible con régimen laminar.)</li>
+          <li><strong>Salida</strong> → borde derecho → presión = <span class="code-inline">0 Pa</span></li>
+          <li><strong>Simetría</strong> → bordes superior e inferior (simula túnel infinito)</li>
+          <li><strong>Pared</strong> (por defecto) → contorno del perfil, condición de no deslizamiento</li>
+        </ul>
+        <p>En <strong>Valores iniciales 1</strong>, campo de velocidad: <span class="code-inline">(0.1, 0)</span> para facilitar la convergencia.</p>
+        <div class="note">
+          <strong>¿Por qué 0.1 m/s y no 10?</strong> Con 10 m/s el Reynolds sale ~677.000, régimen claramente turbulento. El solver laminar no converge a esa velocidad porque la física no cuadra. Con 0.1 m/s (Re ≈ 6.770) el régimen laminar es razonable.
+        </div>
+      </div>
+
+      <div class="step" data-step="7">
+        <h4>Mallado</h4>
+        <p>Malla → Tamaño predefinido: <strong>"Grueso"</strong> (global). Añadir <strong>Tamaño libre triangular</strong>.</p>
+        <p>Añadir un nodo <strong>Tamaño</strong> adicional solo sobre los contornos del perfil NACA con tamaño máximo de elemento = <span class="code-inline">0.01 m</span> (personalizado). Esto produce una malla fina cerca del ala (~4.200 elementos) que se abre progresivamente hacia los bordes.</p>
+        <div class="note">
+          <strong>Consejo:</strong> Si el mallado tarda más de 30 segundos, algo está mal configurado. Cancelar, verificar que el tamaño global sea "Grueso" y que el refinamiento solo aplique a los contornos del perfil, no a todo el dominio.
+        </div>
+      </div>
+
+      <div class="step" data-step="8">
+        <h4>Resolver y primeros resultados</h4>
+        <p>Estudio 1 → Calcular. Gráficos de superficie para presión y velocidad. A 0° de ataque (perfil simétrico): distribución simétrica arriba y abajo, punto de estancamiento en el borde de ataque (presión máxima, velocidad cero), sustentación neta cero.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ═══ PHASE B: ANGLE OF ATTACK ═══ -->
+    <div id="phase-b" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">▸ Fase B</div>
+      <h3 class="phase-title">Ángulo de ataque y barrido paramétrico (laminar)</h3>
+      <p class="phase-desc">Parametrización del ángulo de ataque para romper la simetría y estudiar la generación de sustentación.</p>
+
+      <div class="step" data-step="1">
+        <h4>Crear parámetro alpha</h4>
+        <p>Definiciones globales → Parámetros:</p>
+        <div class="code-block">alpha = 5[deg]     // Ángulo de ataque</div>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Rotar el perfil</h4>
+        <p>Geometría → Transformaciones → <strong>Rotar</strong>:</p>
+        <ul>
+          <li>Entrada: la curva de interpolación (antes de Convertir a sólido)</li>
+          <li>Ángulo de rotación: <span class="code-inline">alpha</span></li>
+          <li>Centro de rotación: <span class="code-inline">(0.25, 0)</span> — el centro aerodinámico a ¼ de cuerda</li>
+        </ul>
+        <p>El orden en el árbol debe ser: Curva → <strong>Rotar</strong> → Convertir a sólido → Diferencia.</p>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Calcular sustentación y drag</h4>
+        <p>Resultados → Valores derivados → <strong>Integración de línea</strong>. Seleccionar contornos del perfil.</p>
+        <ul>
+          <li>Sustentación: expresión <span class="code-inline">spf.T_stressy</span> (componente vertical del tensor de esfuerzos)</li>
+          <li>Drag: expresión <span class="code-inline">spf.T_stressx</span> (componente horizontal)</li>
+        </ul>
+        <div class="note">
+          <strong>Signo:</strong> COMSOL calcula la fuerza sobre el fluido. La fuerza sobre el ala es la opuesta: si el valor es negativo en Y, la sustentación real es positiva (hacia arriba).
+        </div>
+      </div>
+
+      <div class="step" data-step="4">
+        <h4>Barrido paramétrico</h4>
+        <p>Estudio 1 → clic derecho → <strong>Barrido paramétrico</strong>:</p>
+        <ul>
+          <li>Parámetro: <span class="code-inline">alpha</span></li>
+          <li>Lista de valores: <span class="code-inline">range(0,1,15)</span></li>
+          <li>Unidad: <span class="code-inline">deg</span></li>
+        </ul>
+        <p>COMSOL resuelve 16 simulaciones (0° a 15°), reconstruyendo geometría y malla automáticamente.</p>
+      </div>
+
+      <div class="step" data-step="5">
+        <h4>Curva de eficiencia L/D</h4>
+        <p>Crear un <strong>operador de integración</strong>: Definiciones → Operadores de componente → Integración, nivel "Contorno", sobre los bordes del perfil. Luego en Evaluación global:</p>
+        <div class="code-block">intop1(spf.T_stressy) / intop1(spf.T_stressx)</div>
+        <div class="note">
+          <strong>Cuidado:</strong> Integrar el ratio punto a punto — ∫(a/b) — NO es lo mismo que dividir las integrales — (∫a)/(∫b). La expresión correcta es la de arriba.
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ═══ PHASE C: TURBULENT ═══ -->
+    <div id="phase-c" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">▸ Fase C</div>
+      <h3 class="phase-title">Modelo turbulento k-ε</h3>
+      <p class="phase-desc">Transición al modelo turbulento para capturar el comportamiento real a Reynolds alto (Re ≈ 3.4 × 10⁶).</p>
+
+      <div class="step" data-step="1">
+        <h4>Cambiar la física</h4>
+        <p>Desactivar o eliminar <span class="code-inline">Flujo laminar (spf)</span>. Componente 1 → Añadir física → <span class="code-inline">Flujo turbulento, k-ε (spf)</span>.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Reconfigurar condiciones de contorno</h4>
+        <p>Misma estructura que antes, pero con velocidad de entrada mayor. Crear parámetro global:</p>
+        <div class="code-block">U_in = 50[m/s]</div>
+        <p>Condiciones: Entrada → <span class="code-inline">U_in</span>, Salida → 0 Pa, Simetría → bordes sup/inf, Pared → perfil. Valores iniciales: <span class="code-inline">(50, 0)</span>.</p>
+        <div class="note">
+          <strong>Sobre la velocidad:</strong> A 50 m/s, el Mach ≈ 0.15, justo en el límite de flujo incompresible. A 150 m/s (Mach ≈ 0.44) los resultados del k-ε son solo aproximados, ya que el modelo asume incompresibilidad.
+        </div>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Resolver y lanzar barrido paramétrico</h4>
+        <p>Mismo barrido: <span class="code-inline">alpha = range(0,1,15)[deg]</span>. Evaluar sustentación y drag para cada ángulo. Graficar con Grupo gráfico 1D → Gráfico de tabla.</p>
+      </div>
+
+      <div class="results-card">
+        <h4>Resultados del modelo turbulento</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">La curva de sustentación muestra el comportamiento clásico: zona lineal (0°–10°), transición (10°–12°), y entrada en pérdida (13°–15°) donde la sustentación se aplana. La curva de eficiencia L/D tiene forma de campana con el pico en torno a 4°.</p>
+        <div class="results-grid">
+          <div class="result-item">
+            <div class="value">~34</div>
+            <div class="desc">L/D máximo (a 4°)</div>
+          </div>
+          <div class="result-item">
+            <div class="value">50 m/s</div>
+            <div class="desc">Velocidad de entrada</div>
+          </div>
+          <div class="result-item">
+            <div class="value">3.4M</div>
+            <div class="desc">Número de Reynolds</div>
+          </div>
+          <div class="result-item">
+            <div class="value">~13°</div>
+            <div class="desc">Inicio de pérdida</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ═══ PHASE D: POTENTIAL FLOW ═══ -->
+    <div id="phase-d" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">▸ Fase D</div>
+      <h3 class="phase-title">Flujo potencial con condición de Kutta</h3>
+      <p class="phase-desc">Modelo teórico usando el módulo de Matemática de COMSOL para resolver la ecuación de Laplace para la función de corriente ψ, con implementación de la condición de Kutta mediante Ecuaciones Globales.</p>
+
+      <div class="step" data-step="1">
+        <h4>Nuevo modelo — física de Matemática</h4>
+        <p>Modelo 2D nuevo (o copia del anterior sin la física de fluidos). Misma geometría con rectángulo y perfil NACA recortado. Parámetros:</p>
+        <div class="code-block">U0    = 50          // Velocidad (adimensional)
+alpha = -4[deg]     // Ángulo de ataque</div>
+        <p>Añadir física: <strong>EDP en forma de coeficientes</strong>. Renombrar variable dependiente a <span class="code-inline">psi</span>. Configurar como Laplace: coeficiente de difusión c = 1, todos los demás (a, f, da, ea) a 0.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Condiciones de contorno — campo lejano</h4>
+        <p><strong>Valor de Dirichlet</strong> en los 4 bordes del rectángulo:</p>
+        <div class="formula">ψ = U0 · y</div>
+        <p>Esto impone flujo uniforme horizontal en el campo lejano.</p>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Condiciones de contorno — perfil</h4>
+        <p>Otro <strong>Valor de Dirichlet</strong> en los contornos del perfil NACA:</p>
+        <div class="formula">ψ = psi0</div>
+        <p>Donde <span class="code-inline">psi0</span> es una incógnita global que COMSOL calculará junto con ψ. El valor de ψ sobre el perfil (una línea de corriente) determina la circulación.</p>
+      </div>
+
+      <div class="step" data-step="4">
+        <h4>Sonda en el borde de fuga</h4>
+        <p>Definiciones → Operadores de componente → <strong>Punto de evaluación</strong>. Coordenadas del borde de fuga (con alpha = −4°):</p>
+        <ul>
+          <li>x ≈ 0.25 + 0.75·cos(4°) ≈ <span class="code-inline">0.998</span></li>
+          <li>y ≈ 0.75·sin(4°) ≈ <span class="code-inline">0.052</span></li>
+        </ul>
+        <p>Expresión: <span class="code-inline">psix</span> (derivada parcial de ψ respecto a x).</p>
+      </div>
+
+      <div class="step" data-step="5">
+        <h4>Ecuaciones Globales — condición de Kutta</h4>
+        <p>Componente 1 → Añadir Matemática → ODE y EDA → <strong>Ecuaciones globales</strong>:</p>
+        <ul>
+          <li>Variable: <span class="code-inline">psi0</span>, valor inicial: 0</li>
+          <li>Ecuación: <span class="code-inline">comp1.ppb1</span> (el nombre de la sonda)</li>
+        </ul>
+        <p>Esto le dice a COMSOL: "ajusta psi0 hasta que ∂ψ/∂x = 0 en el borde de fuga", garantizando que el flujo abandone el perfil suavemente sin dar la vuelta a la arista afilada.</p>
+      </div>
+
+      <div class="step" data-step="6">
+        <h4>Cálculo de sustentación</h4>
+        <p>Crear operador de integración (intop1) sobre los contornos del perfil. La sustentación se obtiene integrando el coeficiente de presión:</p>
+        <div class="code-block">-intop1((1 - ((psiy*1[m])^2 + (psix*1[m])^2) / U0^2) * ny)</div>
+        <div class="note">
+          <strong>Sobre unidades:</strong> El módulo de Matemática trata las variables como adimensionales, pero las coordenadas tienen unidades de metros. Multiplicar <span class="code-inline">psix</span> por <span class="code-inline">1[m]</span> corrige la inconsistencia. Usar <span class="code-inline">ux/uy</span> en lugar de <span class="code-inline">d(u,x)/d(u,y)</span> — el operador d() no funciona dentro de intop1 sobre contornos.
+        </div>
+      </div>
+
+      <div class="step" data-step="7">
+        <h4>Verificación y resultados</h4>
+        <p>El gráfico de velocidad mostró asimetría clara: más velocidad en el extradós, confirmando circulación. psi0 convergió a un valor distinto de cero y la sonda ppb1 dio prácticamente cero (~10⁻¹⁴), confirmando que la condición de Kutta se cumplió.</p>
+      </div>
+
+      <div class="results-card">
+        <h4>Comparación con la teoría de perfil delgado</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">La teoría predice C<sub>L</sub> = 2π·sin(α). A bajos ángulos de ataque (0°–6°), las curvas del modelo turbulento y la teoría coinciden bien. A ángulos altos divergen: el flujo potencial sigue dando sustentación creciente (no sabe que hay desprendimiento), mientras que el turbulento se aplana y entra en pérdida.</p>
+        <div class="results-grid">
+          <div class="result-item">
+            <div class="value">0.44</div>
+            <div class="desc">C<sub>L</sub> teórico a 4°</div>
+          </div>
+          <div class="result-item">
+            <div class="value">0.43</div>
+            <div class="desc">C<sub>L</sub> COMSOL potencial</div>
+          </div>
+          <div class="result-item">
+            <div class="value">0.40</div>
+            <div class="desc">C<sub>L</sub> turbulento a 4°</div>
+          </div>
+          <div class="result-item">
+            <div class="value">~10⁻¹⁴</div>
+            <div class="desc">Error condición Kutta</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="errors" style="position:relative;top:-80px;"></div>
+    <!-- ═══ ERRORES Y SOLUCIONES ═══ -->
+    <div class="troubleshooting fade-in">
+      <div class="phase-label">▸ Errores y soluciones</div>
+      <h3 class="troubleshooting-title">Problemas encontrados durante el proyecto</h3>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>El mallado tarda más de 10 minutos</h4>
+        <p>La malla estaba configurada con tamaño fino globalmente, generando millones de elementos innecesarios lejos del perfil.</p>
+        <div class="fix-label">Solución</div>
+        <p>Poner el tamaño global en <span class="code-inline">"Grueso"</span> y añadir un nodo de Tamaño adicional solo sobre los contornos del perfil con tamaño máximo 0.01 m. El mallado baja a ~4.200 elementos y tarda segundos.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Error de convergencia con flujo laminar a 10 m/s</h4>
+        <p>El solver no converge porque a 10 m/s el Reynolds es ~677.000, régimen claramente turbulento. El modelo laminar no puede resolver esa física.</p>
+        <div class="fix-label">Solución</div>
+        <p>Dos opciones: bajar la velocidad a <span class="code-inline">0.1 m/s</span> (Re ≈ 6.770, laminar) o cambiar la física a <span class="code-inline">Flujo turbulento k-ε</span> para mantener velocidades realistas.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>No se puede restar la curva de interpolación del rectángulo</h4>
+        <p>La operación de Diferencia booleana falla porque COMSOL necesita un sólido cerrado para sustraer, no una curva.</p>
+        <div class="fix-label">Solución</div>
+        <p>Añadir un nodo <span class="code-inline">Convertir a sólido</span> sobre la curva de interpolación antes de la Diferencia booleana. Luego sustraer el sólido resultante.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>L/D da valores sin sentido (picos positivos y negativos aleatorios)</h4>
+        <p>Se intentó calcular la eficiencia integrando el ratio punto a punto: <span class="code-inline">intop1(spf.T_stressy / spf.T_stressx)</span>. Esto calcula ∫(a/b), no (∫a)/(∫b) — son operaciones matemáticamente distintas.</p>
+        <div class="fix-label">Solución</div>
+        <p>Dividir las integrales, no integrar la división: <span class="code-inline">intop1(spf.T_stressy) / intop1(spf.T_stressx)</span>.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>El operador d() no funciona dentro de intop1</h4>
+        <p>Al intentar <span class="code-inline">intop1(d(u,x))</span>, COMSOL da error porque no sabe calcular derivadas espaciales dentro de un operador de integración sobre contornos.</p>
+        <div class="fix-label">Solución</div>
+        <p>Usar la notación abreviada de COMSOL: <span class="code-inline">ux</span> y <span class="code-inline">uy</span> en lugar de <span class="code-inline">d(u,x)</span> y <span class="code-inline">d(u,y)</span>. Son campos precalculados que sí funcionan dentro de intop1.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>El flujo potencial da sustentación cero (sin condición de Kutta)</h4>
+        <p>Al resolver ∇²φ = 0 con condiciones de contorno estándar, COMSOL encuentra la solución con circulación cero, que es matemáticamente válida pero físicamente incorrecta.</p>
+        <div class="fix-label">Solución</div>
+        <p>Cambiar a la función de corriente ψ e implementar la condición de Kutta usando Ecuaciones Globales: una variable desconocida <span class="code-inline">psi0</span> (valor de ψ en el perfil) acoplada con una sonda que mide <span class="code-inline">psix</span> en el borde de fuga, forzando que ∂ψ/∂x = 0 allí.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Inconsistencia de unidades en el módulo de Matemática</h4>
+        <p>Las variables ux/uy tienen unidades 1/m según COMSOL (derivada de variable adimensional respecto a coordenada en metros), pero U0 es adimensional. Al mezclarlas en la expresión del Cp, los valores no cuadran.</p>
+        <div class="fix-label">Solución</div>
+        <p>Multiplicar las derivadas por <span class="code-inline">1[m]</span> para corregir las unidades: <span class="code-inline">(psix*1[m])²</span>. Alternativamente, interpretar el resultado directamente como C<sub>L</sub> adimensional, que dio ~0.43 frente al 0.44 teórico.</p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+  <div class="container">
+    <p class="fname">FLUIDWORKS</p>
+    <p>CFD Simulation Logbook — COMSOL Multiphysics</p>
+    <p style="margin-top: 0.3rem;">Valen · 2026</p>
+  </div>
+</footer>
+
+<script>
+const nav = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
+</body>
+</html>

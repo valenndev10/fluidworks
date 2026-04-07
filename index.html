@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FLUIDWORKS — CFD Simulation Logbook</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#C45A2C">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">FLUIDWORKS</a>
+    <ul class="nav-links">
+      <li><a href="#concepts">Conceptos</a></li>
+      <li><a href="project-airfoil.html">Perfil Alar</a></li>
+      <li><a href="project-tube.html">Tubo Finito</a></li>
+      <li><a href="project-flatplate.html">Placa Plana</a></li>
+      <li><a href="project-flatplate.html">Placa Plana</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-label">CFD Simulation Logbook</div>
+    <h1>FLUID<span>WORKS</span></h1>
+    <p class="hero-sub">
+      Colección de proyectos de mecánica de fluidos computacional desarrollados en COMSOL Multiphysics.
+      Cada proyecto documenta paso a paso el proceso completo: desde la definición de parámetros hasta la interpretación de resultados.
+    </p>
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <div class="number">3</div>
+        <div class="label">Proyectos</div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="number">2D</div>
+        <div class="label">Simulaciones</div>
+      </div>
+      <div class="hero-meta-item">
+        <div class="number">CFD</div>
+        <div class="label">Módulo COMSOL</div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    Explorar
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="container">
+    <div class="section-label fade-in">Proyectos</div>
+    <h2 class="section-title fade-in">Simulaciones realizadas</h2>
+    <p class="section-intro fade-in">Haz clic en cada proyecto para ver la guía completa paso a paso en COMSOL.</p>
+
+    <div class="projects-grid">
+
+      <a href="project-airfoil.html" class="project-preview fade-in">
+        <div class="pnum">01</div>
+        <div>
+          <h3>Simulación CFD del perfil NACA 0012</h3>
+          <p>Flujo de aire alrededor de un perfil alar en 2D: modelo laminar, turbulento k-ε con barrido paramétrico del ángulo de ataque, y flujo potencial con condición de Kutta.</p>
+          <div class="tags">
+            <span class="tag hl">CFD Module</span>
+            <span class="tag hl">Matemática</span>
+            <span class="tag">Re ≈ 3.4M</span>
+            <span class="tag">k-ε</span>
+            <span class="tag">Flujo potencial</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="project-tube.html" class="project-preview fade-in">
+        <div class="pnum">02</div>
+        <div>
+          <h3>Región de entrada hidrodinámica en tubo finito</h3>
+          <p>Desarrollo del perfil de velocidad en un tubo cilíndrico, desde perfil uniforme de entrada hasta Poiseuille completamente desarrollado. Validación contra solución analítica.</p>
+          <div class="tags">
+            <span class="tag hl">Flujo laminar</span>
+            <span class="tag">2D Axisimétrico</span>
+            <span class="tag">ρ = 1, μ = 1</span>
+            <span class="tag">Poiseuille</span>
+          </div>
+        </div>
+      </a>
+
+      <a href="project-flatplate.html" class="project-preview fade-in">
+        <div class="pnum">03</div>
+        <div>
+          <h3>Capa límite térmica sobre placa plana</h3>
+          <p>Capa límite hidrodinámica y térmica con flujo paralelo. Validación contra Blasius y Pohlhausen, estudios paramétricos variando Re y Pr con comparación de Nusselt.</p>
+          <div class="tags">
+            <span class="tag hl">Laminar + Heat Transfer</span>
+            <span class="tag hl">Non-Isothermal</span>
+            <span class="tag">Pr = 0.71</span>
+            <span class="tag">Blasius / Pohlhausen</span>
+          </div>
+        </div>
+      </a>
+
+      <div class="coming-soon fade-in">
+        <div class="badge-wip" style="background: var(--text-muted);">Idea pendiente</div>
+        <h3>Simulación transitoria del NACA 0012</h3>
+        <p>Evolución temporal del flujo: formación de la estela, desarrollo de la circulación desde el arranque, y desprendimiento de vórtices.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONCEPTS -->
+<section id="concepts" style="background: white; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="container">
+    <div class="section-label fade-in">Fundamentos</div>
+    <h2 class="section-title fade-in">Conceptos aprendidos</h2>
+    <p class="section-intro fade-in">
+      A lo largo de los proyectos surgieron pausas necesarias para entender la física que hay detrás de cada simulación. Estos son los conceptos clave que se fueron aclarando en el camino.
+    </p>
+
+    <div class="concepts-grid">
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Aerodinámica</div>
+        <h3>La capa límite</h3>
+        <p>
+          Cuando el aire fluye sobre una superficie sólida, la condición de no deslizamiento obliga a que la velocidad sea cero justo en contacto con ella. La zona delgada donde la velocidad transiciona de cero a la velocidad de la corriente libre se llama <strong>capa límite</strong>. Es extremadamente fina (milímetros en un avión real), pero es donde ocurre toda la acción: fricción, transferencia de calor, y la decisión de si el flujo se mantiene adherido o se desprende.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Aerodinámica</div>
+        <h3>Desprendimiento de la capa límite</h3>
+        <p>
+          A lo largo del extradós del ala, el aire primero se acelera (gradiente de presión <em>favorable</em>) y luego tiene que frenarse hacia el borde de fuga (gradiente <em>adverso</em>). Si este gradiente adverso es demasiado severo, el aire cercano a la superficie se frena completamente, su velocidad llega a cero, y comienza a fluir hacia atrás. Ese punto es el <strong>punto de separación</strong>: la capa límite se despega y se forma una zona caótica de recirculación. A mayor ángulo de ataque, más agresivo es el gradiente y más se adelanta la separación, hasta llegar a la <strong>entrada en pérdida</strong> (stall).
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Aerodinámica</div>
+        <h3>Sustentación y Drag</h3>
+        <p>
+          La <strong>sustentación</strong> (lift) es la fuerza vertical generada por la diferencia de presión entre extradós e intradós. El <strong>drag</strong> (resistencia) tiene dos componentes: la <em>fricción viscosa</em>, siempre presente, y el <em>drag de presión</em>, causado por la distribución de presiones distorsionada cuando hay desprendimiento. El ratio L/D define la eficiencia aerodinámica: en la simulación turbulenta del NACA 0012, el máximo L/D ≈ 34 se alcanzó a 4° de ángulo de ataque.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Teoría</div>
+        <h3>Flujo potencial y la paradoja de D'Alembert</h3>
+        <p>
+          Si asumimos fluido invíscido e irrotacional, el campo de velocidades se expresa como gradiente de una función escalar φ (el potencial), que satisface la ecuación de Laplace: ∇²φ = 0. Es una simplificación enorme y computacionalmente barata. Sin embargo, al no haber viscosidad, no existe capa límite, no hay desprendimiento, y el arrastre resulta ser exactamente cero (la <strong>paradoja de D'Alembert</strong>). A pesar de esto, la sustentación se predice bien a ángulos bajos.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Teoría</div>
+        <h3>La condición de Kutta y la circulación</h3>
+        <p>
+          La ecuación de Laplace tiene infinitas soluciones alrededor de un perfil, cada una con diferente circulación Γ. Sin circulación no hay sustentación. La <strong>condición de Kutta</strong> selecciona la solución correcta: el flujo debe abandonar el borde de fuga suavemente. En la realidad, es la viscosidad quien impone esto. En flujo potencial, hay que imponerla explícitamente. Se implementó en COMSOL acoplando la EDP de Laplace con Ecuaciones Globales y una sonda en el borde de fuga.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Transporte</div>
+        <h3>Analogía de transporte: ν, α, D</h3>
+        <p>
+          La <strong>viscosidad cinemática</strong> (ν = μ/ρ) es la difusividad del momento lineal. La <strong>difusividad térmica</strong> (α = k/ρcₚ) gobierna la difusión de calor, y la <strong>difusividad másica</strong> (D) la de especies químicas. Las tres comparten unidades (m²/s). Los números que las relacionan son el <strong>Prandtl</strong> (Pr = ν/α), el <strong>Schmidt</strong> (Sc = ν/D) y el <strong>Lewis</strong> (Le = α/D). Cuando Pr = 1, los perfiles de velocidad y temperatura se desarrollan de forma análoga.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Hidráulica</div>
+        <h3>Región de entrada hidrodinámica</h3>
+        <p>
+          Cuando un fluido entra en un tubo con perfil uniforme, la viscosidad frena las capas cercanas a la pared. La capa límite crece y el fluido del centro se acelera para conservar el caudal. A una distancia L<sub>e</sub> ≈ 0.05·Re·D, las capas límite se fusionan y el perfil alcanza la forma parabólica de <strong>Poiseuille</strong> con u<sub>max</sub> = 2·u<sub>entrada</sub>. La caída de presión es no lineal en la región de entrada y lineal una vez desarrollado el flujo.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Numérico</div>
+        <h3>Laminar vs. Turbulento en COMSOL</h3>
+        <p>
+          El modelo <strong>laminar</strong> resuelve Navier-Stokes directamente y funciona a Reynolds bajos. El modelo <strong>turbulento k-ε</strong> añade dos ecuaciones de transporte para modelar la turbulencia, permitiendo Reynolds altos. La turbulencia mezcla aire de alta energía hacia la superficie, "recargando" la capa límite y retrasando el desprendimiento — por eso el modelo turbulento aguanta ángulos de ataque más altos.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Capa límite</div>
+        <h3>Solución de Blasius y autosimilaridad</h3>
+        <p>
+          Blasius resolvió la ecuación de Navier-Stokes para flujo laminar sobre placa plana y demostró que el perfil de velocidad es <strong>autosimilar</strong>: tiene la misma forma en cualquier posición x si se expresa en la variable η = y·√(U∞/νx). La función f'(η) = u/U∞ es universal, va de 0 en la pared a 1 en el flujo libre, alcanzando f' ≈ 0.99 cuando η ≈ 5 (borde de la capa límite). El espesor físico es δ(x) = 5x/√(Re<sub>x</sub>): a mayor Re, capa más fina.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Capa límite</div>
+        <h3>Solución de Pohlhausen (capa límite térmica)</h3>
+        <p>
+          Pohlhausen hizo para la temperatura lo que Blasius hizo para la velocidad: resolvió la ecuación de energía acoplada a Blasius y obtuvo el perfil θ(η) = (T−T<sub>w</sub>)/(T∞−T<sub>w</sub>). La relación entre espesores es δ/δ<sub>T</sub> ≈ Pr<sup>1/3</sup>. Si Pr < 1 (aire), la capa térmica es más gruesa que la hidrodinámica. Si Pr > 1 (agua), la térmica es más fina. Cuando Pr = 1, ambos perfiles son idénticos.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Capa límite</div>
+        <h3>Efecto de desplazamiento</h3>
+        <p>
+          La capa límite "empuja" al flujo exterior hacia arriba porque cerca de la pared el fluido va más lento y ocupa espacio. Por conservación de masa, el flujo exterior tiene que acelerarse para compensar el déficit de caudal. A Re bajo la capa límite es gruesa y este efecto es significativo (se observó un overshoot del 12% a Re = 80). A Re alto, la capa límite es tan fina que el efecto es despreciable. Esto explica por qué la hipótesis de Blasius (capa límite delgada) falla a Reynolds bajos.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Transferencia de calor</div>
+        <h3>Número de Nusselt</h3>
+        <p>
+          El <strong>Nusselt</strong> (Nu = h·L/k) es el equivalente adimensional del coeficiente de convección. Mide la eficacia de la transferencia de calor: Nu = 1 significaría pura conducción, valores mayores indican que la convección domina. Para placa plana con T<sub>w</sub> constante, Pohlhausen demostró que Nu<sub>x</sub> = 0.332·Re<sub>x</sub><sup>1/2</sup>·Pr<sup>1/3</sup>, conectando directamente el flujo (Re) y las propiedades del fluido (Pr) con la transferencia de calor.
+        </p>
+      </div>
+
+      <div class="concept-card fade-in">
+        <div class="concept-tag">Fundamentos</div>
+        <h3>Condición de no deslizamiento (no-slip)</h3>
+        <p>
+          El fluido en contacto con la pared tiene velocidad cero respecto a ella. No es una simplificación: es una observación experimental verificada con enorme precisión. Las moléculas quedan "atrapadas" por fuerzas intermoleculares con la superficie. Solo se rompe en gases rarefactos (Knudsen > 0.01), superficies superhidrofóbicas, o micro/nanocanales — directamente relevante para el TFG sobre microcanales, donde podría ser necesario considerar deslizamiento parcial.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="container">
+    <div class="about-block fade-in">
+      <div class="section-label">Sobre este logbook</div>
+      <h2 class="section-title">¿Qué es FLUIDWORKS?</h2>
+      <p class="about-text">
+        Este logbook documenta el proceso de aprendizaje autodidacta de COMSOL Multiphysics como preparación para mi Trabajo de Fin de Grado: <em>"Caracterización numérica de la transferencia de calor con cambio de fase, con aplicación a electrónica de potencia, usando canales microfluídicos"</em>. Antes de enfrentarme a la complejidad del TFG, necesitaba dominar la herramienta — y la mejor forma de aprender es simulando problemas reales, equivocándome, y documentando cada paso.
+      </p>
+      <p class="about-text">
+        Cada proyecto aquí recoge no solo los pasos a seguir, sino también los errores que cometí y cómo los resolví. Si estás empezando con COMSOL o con simulación CFD, espero que te sirva como referencia práctica.
+      </p>
+      <p class="about-signature">— Valen, estudiante de ingeniería</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p class="fname">FLUIDWORKS</p>
+    <p>CFD Simulation Logbook — COMSOL Multiphysics</p>
+    <p style="margin-top: 0.3rem;">Valen · 2026</p>
+  </div>
+</footer>
+
+<script>
+const nav = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
+</body>
+</html>

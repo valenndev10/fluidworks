@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tubo de longitud finita — FLUIDWORKS</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#C45A2C">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">FLUIDWORKS</a>
+    <ul class="nav-links">
+      <li><a href="index.html#concepts">Conceptos</a></li>
+      <li><a href="project-airfoil.html">Perfil Alar</a></li>
+      <li><a href="project-tube.html">Tubo Finito</a></li>
+      <li><a href="project-flatplate.html">Placa Plana</a></li>
+      <li><a href="project-flatplate.html">Placa Plana</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- PROJECT HERO -->
+<div class="project-hero">
+  <div class="container">
+    <a href="index.html" class="back-link">← Volver al logbook</a>
+    <div class="pnum">02</div>
+    <h1>Región de entrada hidrodinámica en tubo finito</h1>
+    <p class="desc">
+      Problema clásico de validación: simulación del desarrollo del perfil de velocidad en un tubo cilíndrico, desde el perfil uniforme de entrada hasta el perfil parabólico de Poiseuille completamente desarrollado. Validación contra la solución analítica conocida.
+    </p>
+    <div class="meta">
+      <span class="meta-chip highlight">COMSOL Multiphysics</span>
+      <span class="meta-chip">2D Axisimétrico</span>
+      <span class="meta-chip">Flujo laminar (spf)</span>
+      <span class="meta-chip">ρ = 1, μ = 1</span>
+    </div>
+    <div class="toc">
+      <a href="#phase-a">Fase A · Configuración</a>
+      <span class="sep">·</span>
+      <a href="#phase-b">Fase B · Validación</a>
+      <span class="sep">·</span>
+      <a href="#errors">Errores</a>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<section style="padding-top: 2rem;">
+  <div class="container">
+
+    <!-- ═══ PHASE A: SETUP ═══ -->
+    <div id="phase-a" class="phase fade-in">
+      <div class="phase-label">▸ Fase A</div>
+      <h3 class="phase-title">Configuración del modelo</h3>
+
+      <div class="step" data-step="1">
+        <h4>Crear el componente 2D axisimétrico</h4>
+        <p>Nuevo modelo → dimensión: <strong>2D axisimétrico</strong> (no 2D plano). Esto es fundamental: en 2D-axi COMSOL entiende un tubo cilíndrico con simetría de revolución. Las coordenadas del marco espacial deben ser <strong>r, phi, z</strong> (sistema cilíndrico). Si fueran x, y, estaría resolviendo un canal entre placas paralelas, que es un problema diferente.</p>
+        <p>Física: <span class="code-inline">Flujo laminar (spf)</span>. Estudio: <strong>Estacionario</strong>.</p>
+        <div class="note">
+          <strong>Verificación:</strong> Para confirmar que el componente es 2D-axi y no plano, hacer clic en el nodo del Componente. Las coordenadas del marco espacial deben decir r, phi, z (sistema cilíndrico). Si dice x, y, es 2D plano — crear un componente nuevo.
+        </div>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Parámetros globales</h4>
+        <p>Definiciones globales → Parámetros:</p>
+        <div class="code-block">radio  = 0.1[m]              // Radio del tubo
+D      = 2*radio               // Diámetro
+rho    = 1[kg/m^3]             // Densidad (simplificada)
+mu     = 1[Pa*s]               // Viscosidad dinámica (simplificada)
+Re     = 100                   // Número de Reynolds
+u_e    = Re*mu/(rho*D)         // Velocidad de entrada (derivada de Re)
+L      = 1.5*0.05*Re*D         // Longitud del tubo (1.5 × Le teórica)</div>
+        <div class="note">
+          <strong>¿Por qué ρ = 1, μ = 1?</strong> Con estas propiedades simplificadas, el Reynolds queda Re = u<sub>e</sub>·D, lo que permite controlarlo fácilmente cambiando solo el parámetro Re. No simulamos un fluido real — solo importa que el número adimensional sea correcto. El profesor lo recomendó como práctica habitual en problemas académicos de validación.
+        </div>
+        <div class="note">
+          <strong>Longitud del tubo:</strong> La longitud de entrada teórica es L<sub>e</sub> ≈ 0.05·Re·D. Para Re = 100, esto da L<sub>e</sub> = 1 m. Usando L = 1.5·L<sub>e</sub> nos aseguramos de que el flujo tenga espacio de sobra para desarrollarse completamente. Si Re es demasiado bajo (por ejemplo Re = 0.2 con los parámetros iniciales), la longitud de entrada es de milímetros y el fenómeno apenas se aprecia.
+        </div>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Geometría</h4>
+        <p>Geometría → <strong>Rectángulo</strong>:</p>
+        <ul>
+          <li>Anchura: <span class="code-inline">radio</span></li>
+          <li>Altura: <span class="code-inline">L</span></li>
+          <li>Base: <strong>Esquina</strong> en <span class="code-inline">(0, 0)</span>, rotación: <strong>0°</strong></li>
+        </ul>
+        <p>El borde izquierdo (r = 0) es el eje de simetría axial. El borde derecho (r = radio) es la pared del tubo. No es necesario modelar una región más ancha antes del tubo: la condición de velocidad uniforme en la entrada ya representa implícitamente que el fluido viene de un depósito grande.</p>
+      </div>
+
+      <div class="step" data-step="4">
+        <h4>Propiedades del fluido</h4>
+        <p>En lugar de añadir un material de la biblioteca, se definen directamente en <strong>Propiedades de fluidos 1</strong>: ρ = <span class="code-inline">rho</span>, μ = <span class="code-inline">mu</span>.</p>
+      </div>
+
+      <div class="step" data-step="5">
+        <h4>Condiciones de contorno</h4>
+        <ul>
+          <li><strong>Entrada</strong> (borde inferior, z = 0) → <strong>Velocidad normal de entrada</strong>: <span class="code-inline">u_e</span></li>
+          <li><strong>Salida</strong> (borde superior, z = L) → Presión: <span class="code-inline">0 Pa</span>, con "Suprimir reflujo" activado</li>
+          <li><strong>Pared</strong> (borde derecho, r = radio) → No deslizamiento (por defecto)</li>
+          <li><strong>Eje de simetría</strong> (r = 0) → COMSOL lo aplica automáticamente en modelos 2D-axi</li>
+        </ul>
+        <div class="note">
+          <strong>Sobre la entrada:</strong> Usar <strong>"Velocidad normal de entrada"</strong> y no "Campo de velocidad". Con "Campo de velocidad" hay que especificar las componentes r, phi, z manualmente y es fácil confundirse (poner la velocidad en la componente r en vez de z haría que el fluido entre radialmente).
+        </div>
+      </div>
+
+      <div class="step" data-step="6">
+        <h4>Mallar y resolver</h4>
+        <p>Mallado fino estándar (triángulos libres). Resolver en estacionario. Con la geometría y parámetros bien definidos, la solución converge en segundos.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ═══ PHASE B: VALIDATION ═══ -->
+    <div id="phase-b" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">▸ Fase B</div>
+      <h3 class="phase-title">Validación de resultados</h3>
+      <p class="phase-desc">Comprobación del modelo contra las soluciones analíticas conocidas para el perfil de Poiseuille y la caída de presión.</p>
+
+      <div class="step" data-step="1">
+        <h4>Gráfico 2D de velocidad</h4>
+        <p>Resultados → Gráfico de superficie con la componente <span class="code-inline">w</span> (velocidad axial). Se observa claramente cómo el fluido entra con velocidad uniforme (colores azulados/verdes) y progresivamente se acelera en el centro (rojo) mientras se frena cerca de la pared (azul). Es el desarrollo del perfil de velocidad en acción.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Perfil de velocidad en la salida</h4>
+        <p>Resultados → <strong>Grupo gráfico 1D</strong> → Gráfico lineal:</p>
+        <ul>
+          <li>Expresión: <span class="code-inline">w</span> (componente axial)</li>
+          <li>Contorno: borde de la salida (z = L)</li>
+        </ul>
+        <div class="formula">Resultado: perfil parabólico con w<sub>max</sub> = 2 · u<sub>e</sub> en r = 0 y w = 0 en r = radio ✓</div>
+        <p>Perfil de Poiseuille validado contra la solución analítica.</p>
+        <div class="note">
+          <strong>Atención a las variables:</strong> En 2D axisimétrico, las componentes de velocidad son u (radial), v (azimutal), w (axial). La velocidad axial del flujo es <span class="code-inline">w</span>, no <span class="code-inline">v</span>. Si los resultados salen con la variable incorrecta, verificar el orden de coordenadas (r, phi, z). Si los gráficos heredados de un modelo anterior no funcionan, recrearlos desde cero.
+        </div>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Caída de presión a lo largo del eje</h4>
+        <p>Grupo gráfico 1D → Gráfico lineal:</p>
+        <ul>
+          <li>Expresión: <span class="code-inline">p</span> (presión)</li>
+          <li>Contorno: eje de simetría (r = 0)</li>
+        </ul>
+        <p>Se observan dos zonas claramente diferenciadas:</p>
+        <ul>
+          <li><strong>Región de entrada:</strong> caída más pronunciada y no lineal (el fluido se está acelerando en el centro)</li>
+          <li><strong>Flujo desarrollado:</strong> caída lineal (gradiente de presión constante de Poiseuille)</li>
+        </ul>
+        <p>Verificación analítica del gradiente en la zona desarrollada:</p>
+        <div class="formula">dp/dz = −8μu<sub>e</sub> / R² = −8 · 1 · u<sub>e</sub> / (0.1)² = −800 · u<sub>e</sub> Pa/m</div>
+        <p>Consistente con los valores obtenidos en la simulación. ✓</p>
+      </div>
+
+      <div class="results-card">
+        <h4>Resumen de la validación</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">El modelo reproduce correctamente tanto el perfil de velocidad de Poiseuille como la caída de presión teórica, validando la configuración de COMSOL para problemas de flujo interno con desarrollo de capa límite.</p>
+        <div class="results-grid">
+          <div class="result-item">
+            <div class="value">2u<sub>e</sub></div>
+            <div class="desc">Vel. máxima Poiseuille</div>
+          </div>
+          <div class="result-item">
+            <div class="value">0.05·Re·D</div>
+            <div class="desc">Longitud de entrada L<sub>e</sub></div>
+          </div>
+          <div class="result-item">
+            <div class="value">Re = u<sub>e</sub>·D</div>
+            <div class="desc">Reynolds simplificado</div>
+          </div>
+          <div class="result-item">
+            <div class="value">2D-Axi</div>
+            <div class="desc">Componente COMSOL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="errors" style="position:relative;top:-80px;"></div>
+    <!-- ═══ ERRORES Y SOLUCIONES ═══ -->
+    <div class="troubleshooting fade-in">
+      <div class="phase-label">▸ Errores y soluciones</div>
+      <h3 class="troubleshooting-title">Problemas encontrados durante el proyecto</h3>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Componente 2D plano en vez de 2D axisimétrico</h4>
+        <p>Si el modelo se crea como 2D plano, COMSOL resuelve un canal entre placas paralelas infinitas en lugar de un tubo cilíndrico. Los resultados parecen razonables pero son físicamente incorrectos para el problema del tubo.</p>
+        <div class="fix-label">Solución</div>
+        <p>Verificar que las coordenadas del marco espacial sean <span class="code-inline">r, phi, z</span> (no x, y). Si están mal, crear un componente nuevo como 2D axisimétrico desde el inicio y replicar la configuración.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Velocidad de entrada en la componente radial en vez de axial</h4>
+        <p>Al usar "Campo de velocidad" en la condición de Entrada, se puso la velocidad en la componente r (radial). Esto hace que el fluido entre radialmente en vez de en la dirección del tubo.</p>
+        <div class="fix-label">Solución</div>
+        <p>Cambiar a <span class="code-inline">"Velocidad normal de entrada"</span>. Con esta opción solo se indica la magnitud y COMSOL orienta la velocidad perpendicular a la frontera automáticamente. Mucho más limpio y menos propenso a errores.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Coordenadas r, phi, z en orden incorrecto</h4>
+        <p>Las coordenadas estaban como r, z, phi en vez de r, phi, z. Esto intercambia el significado de las componentes de velocidad: <span class="code-inline">w</span> (que debería ser axial) pasa a ser azimutal, y el perfil parabólico aparece en la variable incorrecta.</p>
+        <div class="fix-label">Solución</div>
+        <p>Corregir el orden de coordenadas a <span class="code-inline">r, phi, z</span> en la configuración del componente. Después de corregir, recalcular la solución y recrear los gráficos de resultados.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Gráficos heredados de un modelo anterior no muestran datos correctos</h4>
+        <p>Al cambiar de componente (de 2D plano a 2D-axi), los grupos gráficos creados anteriormente no se actualizan correctamente y muestran resultados planos o erróneos.</p>
+        <div class="fix-label">Solución</div>
+        <p>Eliminar los gráficos heredados y crearlos de nuevo desde cero. Cuando se cambia de componente, siempre recrear también los gráficos de resultados.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>La región de entrada es imperceptible (Reynolds demasiado bajo)</h4>
+        <p>Con los parámetros iniciales (u<sub>e</sub> = 1, ρ = 1, μ = 1, D = 0.2), el Reynolds era solo 0.2. La longitud de entrada teórica era L<sub>e</sub> = 0.002 m (2 mm), haciendo el fenómeno invisible en un tubo de 5 metros.</p>
+        <div class="fix-label">Solución</div>
+        <p>Parametrizar el modelo usando el Reynolds como variable de control: <span class="code-inline">u_e = Re*mu/(rho*D)</span>. Con Re = 100, L<sub>e</sub> = 1 m y el fenómeno se aprecia claramente. Ajustar L a ~1.5·L<sub>e</sub> para un modelo eficiente.</p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+  <div class="container">
+    <p class="fname">FLUIDWORKS</p>
+    <p>CFD Simulation Logbook — COMSOL Multiphysics</p>
+    <p style="margin-top: 0.3rem;">Valen · 2026</p>
+  </div>
+</footer>
+
+<script>
+const nav = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
+</body>
+</html>

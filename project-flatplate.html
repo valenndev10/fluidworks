@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capa límite térmica — FLUIDWORKS</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#C45A2C">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">FLUIDWORKS</a>
+    <ul class="nav-links">
+      <li><a href="index.html#concepts">Conceptos</a></li>
+      <li><a href="project-airfoil.html">Perfil Alar</a></li>
+      <li><a href="project-tube.html">Tubo Finito</a></li>
+      <li><a href="project-flatplate.html" class="active">Placa Plana</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="project-hero">
+  <div class="container">
+    <a href="index.html" class="back-link">← Volver al logbook</a>
+    <div class="pnum">03</div>
+    <h1>Capa límite térmica sobre placa plana</h1>
+    <p class="desc">Simulación 2D de la capa límite hidrodinámica y térmica sobre una placa plana con flujo paralelo uniforme. Validación contra Blasius y Pohlhausen, seguida de estudios paramétricos variando Re y Pr.</p>
+    <div class="meta">
+      <span class="meta-chip highlight">COMSOL Multiphysics</span>
+      <span class="meta-chip">2D Estacionario</span>
+      <span class="meta-chip">Flujo laminar + Heat Transfer</span>
+      <span class="meta-chip">Non-Isothermal Flow</span>
+    </div>
+    <div class="toc">
+      <a href="#phase-a">Fase A · Configuración</a>
+      <span class="sep">·</span>
+      <a href="#phase-b">Fase B · Blasius (Pr = 1)</a>
+      <span class="sep">·</span>
+      <a href="#phase-c">Fase C · Pohlhausen y cambio a aire</a>
+      <span class="sep">·</span>
+      <a href="#phase-d">Fase D · Paramétrico</a>
+      <span class="sep">·</span>
+      <a href="#errors">Errores</a>
+    </div>
+  </div>
+</div>
+
+<section style="padding-top: 2rem;">
+  <div class="container">
+
+    <div id="phase-a" class="phase fade-in">
+      <div class="phase-label">▸ Fase A</div>
+      <h3 class="phase-title">Configuración del modelo (propiedades simplificadas)</h3>
+      <p class="phase-desc">Configuración inicial con propiedades artificiales (ρ = 1, μ = 0.01) para tener control directo del Reynolds. La idea era empezar simple, validar Blasius, y después pasar a la parte térmica.</p>
+
+      <div class="step" data-step="1">
+        <h4>Crear el modelo y seleccionar las físicas</h4>
+        <p>Nuevo modelo → <strong>2D</strong>. Añadir las físicas:</p>
+        <ul>
+          <li><span class="code-inline">Flujo laminar (spf)</span> — resuelve Navier-Stokes</li>
+          <li><span class="code-inline">Transferencia de calor en fluidos (ht)</span> — resuelve la ecuación de energía</li>
+        </ul>
+        <p>Después de añadir ambas, ir a <strong>Multifísica</strong> y añadir manualmente <span class="code-inline">Flujo no isotérmico (Non-Isothermal Flow)</span>. Este nodo acopla ambas físicas.</p>
+        <p>Estudio: <strong>Estacionario</strong>.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Parámetros globales (versión inicial)</h4>
+        <div class="code-block">U_inf   = 1                // Velocidad (se irá subiendo)
+T_inf   = 293.15[K]        // Temperatura del flujo libre (20°C)
+T_p     = 333.15[K]        // Temperatura de la placa (60°C)
+L_placa = 1[m]             // Longitud de la placa
+L_pre   = 0.5[m]           // Longitud zona pre-placa
+H       = 2[m]             // Altura del dominio</div>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Geometría: dos rectángulos adyacentes</h4>
+        <ul>
+          <li><strong>Rectángulo 1 (zona pre-placa):</strong> anchura = <span class="code-inline">L_pre</span>, altura = <span class="code-inline">H</span>, esquina en (0, 0)</li>
+          <li><strong>Rectángulo 2 (zona de la placa):</strong> anchura = <span class="code-inline">L_placa</span>, altura = <span class="code-inline">H</span>, esquina en (L_pre, 0)</li>
+        </ul>
+        <p>La zona pre-placa permite que el flujo llegue con perfil uniforme al borde de ataque de la placa.</p>
+      </div>
+
+      <div class="step" data-step="4">
+        <h4>Propiedades del fluido (simplificadas)</h4>
+        <p>Definidas directamente en Propiedades de fluidos y Fluido 1 de Heat Transfer:</p>
+        <div class="code-block">ρ  = 1     [kg/m³]      // Densidad
+μ  = 0.01  [Pa·s]       // Viscosidad → ν = 0.01
+Cp = 1     [J/(kg·K)]   // Capacidad calorífica
+k  = 0.01  [W/(m·K)]    // Conductividad térmica</div>
+        <p>Con esto: ν = 0.01, α = 0.01, <strong>Pr = 1</strong>. Reynolds: Re<sub>L</sub> = U_inf / 0.01 = 100·U_inf.</p>
+      </div>
+
+      <div class="step" data-step="5">
+        <h4>Condiciones de contorno</h4>
+        <p><strong>Flujo laminar:</strong> Entrada (U_inf, borde izq.), Salida (p = 0, borde der.), Simetría (borde sup.), Pared no-slip (borde inf. rect. 2), Flujo deslizante (borde inf. rect. 1).</p>
+        <p><strong>Heat Transfer:</strong> T_inf en entrada, T_p en la placa, outflow en salida.</p>
+      </div>
+
+      <div class="step" data-step="6">
+        <h4>Mallado con capas de contorno</h4>
+        <p>Tamaño global: "Fino". Triangular libre + <strong>Capas de contorno</strong> sobre la placa: primera capa = <span class="code-inline">0.005 m</span>, ~15 capas, factor 1.2.</p>
+      </div>
+
+      <div class="step" data-step="7">
+        <h4>Resolver: escalonamiento de U_inf</h4>
+        <p>El solver no converge directamente a velocidades altas. Se escalona manualmente:</p>
+        <ul>
+          <li><span class="code-inline">U_inf = 1</span> (Re = 100) — converge fácilmente</li>
+          <li>Subir a <span class="code-inline">U_inf = 10</span> (Re = 1000) — usando la solución anterior como arranque</li>
+          <li>Intentar <span class="code-inline">U_inf = 100</span> (Re = 10000) — converge pero la malla no resuelve bien la capa límite</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="phase-b" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">▸ Fase B</div>
+      <h3 class="phase-title">Validación hidrodinámica — Blasius (propiedades simplificadas)</h3>
+      <p class="phase-desc">Comparación del perfil de velocidad numérico con la solución analítica de Blasius usando ν = 0.01, Pr = 1.</p>
+
+      <div class="step" data-step="1">
+        <h4>Línea de corte y perfil adimensional</h4>
+        <p>Línea de corte vertical a x = 0.75, de y = 0 a y = 0.1. Gráfico lineal:</p>
+        <ul>
+          <li>Eje Y: <span class="code-inline">u/u_inf</span></li>
+          <li>Eje X: <span class="code-inline">y*sqrt(u_inf/(0.01*(x-L_pre)))</span></li>
+        </ul>
+        <div class="note"><strong>¿Por qué adimensionalizar?</strong> El gráfico dimensional (u vs y) dice "tiene buena pinta". El adimensional (u/U∞ vs η) dice "mi simulación se desvía un 6%". Solo lo segundo es una validación.</div>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Comparación en Python con scipy</h4>
+        <p>Exportar datos a .txt. En Python, resolver Blasius (ODE 3er orden) con <span class="code-inline">scipy.integrate.solve_ivp</span>, shooting con f''(0) ≈ 0.3321. Superponer curvas.</p>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Re = 80 → error 24% | Re = 1000 → error 6%</h4>
+        <p>Con las propiedades iniciales (ν = 1, U_inf = 1), Re = 80. El error era ~24% con overshoot del 12%: la capa límite ocupaba δ/L ≈ 56%, demasiado gruesa para Blasius.</p>
+        <p>Tras cambiar μ a 0.01 (ν = 0.01) y subir U_inf a 10 (Re = 1000), el acuerdo mejoró a ~6%. Se intentó Re = 10000 (U_inf = 100) pero la malla no tenía resolución suficiente.</p>
+      </div>
+
+      <div class="results-card">
+        <h4>Resultados de Blasius</h4>
+        <div class="results-grid">
+          <div class="result-item"><div class="value">~24%</div><div class="desc">Error a Re = 80</div></div>
+          <div class="result-item"><div class="value">~6%</div><div class="desc">Error a Re = 1000</div></div>
+          <div class="result-item"><div class="value">~5%</div><div class="desc">Overshoot (desplazamiento)</div></div>
+          <div class="result-item"><div class="value">Re = 1000</div><div class="desc">Punto dulce de la malla</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="phase-c" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">▸ Fase C</div>
+      <h3 class="phase-title">Validación térmica — el camino a Pohlhausen</h3>
+      <p class="phase-desc">La validación del perfil de temperatura resultó mucho más difícil de lo esperado. Con Cp = 1, la disipación viscosa corrompía los resultados. La solución fue cambiar a aire real.</p>
+
+      <div class="step" data-step="1">
+        <h4>Primer intento: θ vs η con Pr = 1</h4>
+        <p>Con Pr = 1, los perfiles de velocidad y temperatura deberían ser idénticos. Se graficó θ = (T−T_p)/(T_inf−T_p) vs η.</p>
+        <p><strong>Resultado:</strong> θ solo llegaba a ~0.78 en vez de 1.0. La temperatura lejos de la placa era ~302 K en vez de 293 K — un exceso de 9 K que no debería estar.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Diagnóstico: disipación viscosa (Brinkman = 25)</h4>
+        <p>El nodo de Multifísica incluye por defecto el calentamiento por fricción μ·(du/dy)².</p>
+        <div class="formula">Br = μ·U² / (k·ΔT) = 0.01 · 100 / (0.01 · 40) = 25 ≫ 1</div>
+        <p>Con Cp = 1, la energía cinética U²/(2·Cp) = 50 K — comparable al ΔT de 40 K del problema.</p>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Intentos de corrección (ninguno funcionó)</h4>
+        <ul>
+          <li>Desactivar disipación viscosa en Multifísica → no mejora suficiente</li>
+          <li>Añadir condición T = T_inf en el borde superior → no mejora</li>
+          <li>Subir Cp a 100 y k a 1 (manteniendo Pr = 1) → tampoco</li>
+        </ul>
+        <p>Con propiedades artificiales tan alejadas de la realidad, cualquier término residual de energía cinética genera artefactos térmicos.</p>
+      </div>
+
+      <div class="step" data-step="4">
+        <h4>Solución definitiva: cambiar a aire real</h4>
+        <ul>
+          <li>Materiales → Añadir material → <strong>"Air"</strong> → asignar a ambos dominios</li>
+          <li>Flujo laminar y Heat Transfer → cambiar propiedades a <strong>"Desde material"</strong></li>
+          <li>Ajustar U_inf para Re = 1000: ν<sub>aire</sub> ≈ 1.516×10⁻⁵ → <span class="code-inline">U_inf = 0.015 m/s</span></li>
+          <li>Actualizar η: <span class="code-inline">y*sqrt(u_inf/((spf.mu/spf.rho)*(x-L_pre)))</span></li>
+        </ul>
+        <p>Con aire, Cp ≈ 1005 y la energía cinética es despreciable. Pr = 0.71, lo que hace la comparación más interesante.</p>
+      </div>
+
+      <div class="step" data-step="5">
+        <h4>Validación con aire: Blasius + Pohlhausen</h4>
+        <p>Se exportaron ambos perfiles y se compararon en Python. Con Pr = 0.71, el perfil de velocidad (azul) sube más rápido que el de temperatura (verde): a un η dado, la velocidad ha recuperado más porcentaje del valor libre que la temperatura.</p>
+        <div class="note"><strong>Interpretación:</strong> Pr = 0.71 < 1 → α > ν → el calor se difunde más lejos → δ<sub>T</sub> > δ → θ(η) crece más lento que f'(η).</div>
+      </div>
+
+      <div class="results-card">
+        <h4>Resultados con aire real (Pr = 0.71, Re = 1000)</h4>
+        <div class="results-grid">
+          <div class="result-item"><div class="value">~3.1%</div><div class="desc">Error Blasius (velocidad)</div></div>
+          <div class="result-item"><div class="value">~3.8%</div><div class="desc">Error Pohlhausen (temp.)</div></div>
+          <div class="result-item"><div class="value">Pr = 0.71</div><div class="desc">Prandtl del aire</div></div>
+          <div class="result-item"><div class="value">δ<sub>T</sub> > δ</div><div class="desc">Pr < 1 confirmado</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="phase-d" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">▸ Fase D</div>
+      <h3 class="phase-title">Estudios paramétricos — Re y Pr</h3>
+      <p class="phase-desc">Dos barridos independientes con aire real para estudiar el efecto del Reynolds y del Prandtl sobre los perfiles y el número de Nusselt.</p>
+
+      <div class="step" data-step="1">
+        <h4>Operador de integración para el Nusselt</h4>
+        <p>Definiciones → Operadores de componente → <strong>Integración</strong> (tipo Contorno) sobre la placa. Nombre: <span class="code-inline">intop1</span>.</p>
+        <p>Integra una expresión a lo largo del contorno. Por ejemplo, <span class="code-inline">intop1(ht.ntflux)</span> da el flujo de calor total. El Nusselt promedio:</p>
+        <div class="formula">Nu<sub>L</sub> = intop1(ht.ntflux) / (T_p − T_inf) / k_aire</div>
+        <div class="note"><strong>Sin L_placa</strong> (la integración ya cubre la longitud). Valores negativos → tomar absoluto. Se usó un parámetro <span class="code-inline">k_aire = 0.0257</span> porque <span class="code-inline">ht.k</span> no estaba definido.</div>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Estudio 1: Variar Re (barrido de U_inf)</h4>
+        <div class="code-block">U_inf = 0.0015  0.005  0.015  0.05  0.15  [m/s]
+Re_L  ≈  100     330    1000   3300  10000</div>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Estudio 2: Variar Pr (barrido de k)</h4>
+        <p>Fijar U_inf = 0.015 (Re = 1000). Parámetro <span class="code-inline">Pr_param</span>. En Heat Transfer → Fluido 1, k como "Definido por el usuario":</p>
+        <div class="code-block">k = spf.mu * 1005 / Pr_param
+
+Pr = 0.1   0.5   0.71   2.0   7.0
+     (metales líquidos → aire → agua)</div>
+      </div>
+
+      <div class="results-card">
+        <h4>Resultados del barrido en Re</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">A Re bajo → overshoot por efecto de desplazamiento (error teórico). A Re alto → malla insuficiente (error numérico). En Re ≈ 1000, ambos errores mínimos.</p>
+        <div class="results-grid">
+          <div class="result-item"><div class="value">14%</div><div class="desc">Error Nu a Re = 99</div></div>
+          <div class="result-item"><div class="value">6.6%</div><div class="desc">Error Nu a Re = 989</div></div>
+          <div class="result-item"><div class="value">26%</div><div class="desc">Error Nu a Re = 9894</div></div>
+          <div class="result-item"><div class="value">0.664·Re<sup>½</sup>·Pr<sup>⅓</sup></div><div class="desc">Correlación analítica</div></div>
+        </div>
+      </div>
+
+      <div class="results-card">
+        <h4>Resultados del barrido en Pr</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">A Pr alto la capa térmica es más fina y la malla pierde resolución. Mismo patrón: desviaciones por discretización, no por la física.</p>
+        <div class="results-grid">
+          <div class="result-item"><div class="value">3.4%</div><div class="desc">Error Nu a Pr = 0.1</div></div>
+          <div class="result-item"><div class="value">6.1%</div><div class="desc">Error Nu a Pr = 0.71</div></div>
+          <div class="result-item"><div class="value">60%</div><div class="desc">Error Nu a Pr = 7</div></div>
+          <div class="result-item"><div class="value">δ/δ<sub>T</sub> ≈ Pr<sup>⅓</sup></div><div class="desc">Relación de espesores</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="errors" style="position:relative;top:-80px;"></div>
+    <div class="troubleshooting fade-in">
+      <div class="phase-label">▸ Errores y soluciones</div>
+      <h3 class="troubleshooting-title">Problemas encontrados durante el proyecto</h3>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Física configurada como Creeping Flow en vez de Laminar Flow</h4>
+        <p>Se seleccionó "Flujo reptante" (Stokes) que omite términos inerciales. Sin inercia no hay capa límite.</p>
+        <div class="fix-label">Solución</div>
+        <p>Eliminar Creeping Flow, añadir <span class="code-inline">Flujo laminar (spf)</span>. Verificar que "Omitir inercia" esté desactivado.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>"Gas ideal" en el nodo de Transferencia de calor</h4>
+        <p>Fluido 1 tenía "Gas ideal", introduciendo dependencias de temperatura y fallos de convergencia.</p>
+        <div class="fix-label">Solución</div>
+        <p>Cambiar a "Gas" o "Líquido" (propiedades constantes).</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Solver segregado no converge al subir U_inf</h4>
+        <p>Al cambiar U_inf directamente de 1 a 10 o 100, el campo inicial está demasiado lejos de la solución.</p>
+        <div class="fix-label">Solución</div>
+        <p>Escalonar: resolver con U_inf = 1, subir a 5, 10... Cada solución sirve como arranque para la siguiente.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Expresión de η no actualizada al cambiar μ</h4>
+        <p>Al pasar de μ = 1 a μ = 0.01, la expresión seguía usando ν = 1. Valores de η 10× menores.</p>
+        <div class="fix-label">Solución</div>
+        <p>Usar <span class="code-inline">y*sqrt(u_inf/((spf.mu/spf.rho)*(x-L_pre)))</span> para que se actualice automáticamente.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Validación a Re = 80: error del 24%</h4>
+        <p>δ/L ≈ 56% — la hipótesis de capa límite delgada no se cumple.</p>
+        <div class="fix-label">Solución</div>
+        <p>Subir Re a 1000 (μ = 0.01, U_inf = 10). Error baja a ~6%.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Perfil térmico no alcanza θ = 1 (Brinkman = 25)</h4>
+        <p>Con Cp = 1, la disipación viscosa genera calentamiento espurio de ~9 K. Se intentó desactivar disipación, subir Cp, forzar T_inf arriba — nada funcionó.</p>
+        <div class="fix-label">Solución</div>
+        <p><strong>Cambiar a aire real.</strong> Con Cp ≈ 1005, la energía cinética es despreciable. U_inf = 0.015 m/s para mantener Re = 1000.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Malla insuficiente a Re = 10000</h4>
+        <p>Capa límite de ~0.035 m, primera celda de 0.005 m demasiado gruesa.</p>
+        <div class="fix-label">Solución</div>
+        <p>Quedarse con Re = 1000 como punto dulce. Mostrar en el paramétrico cómo varía el acuerdo — el "punto dulce" es un cruce de error teórico y numérico específico de la malla.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Tabla de Nu del barrido en Pr muestra valores del barrido de Re</h4>
+        <p>La Evaluación global seguía apuntando al conjunto de datos del barrido de U_inf.</p>
+        <div class="fix-label">Solución</div>
+        <p>En Datos → "Selección de parámetros", seleccionar <span class="code-inline">Pr_param</span> en vez de <span class="code-inline">u_inf</span>. Reevaluar.</p>
+      </div>
+
+      <div class="trouble-item">
+        <div class="error-label">Error</div>
+        <h4>Nu calculado con k_aire fijo en vez de k variable con Pr</h4>
+        <p>La expresión usaba <span class="code-inline">k_aire = 0.0257</span> constante, pero k cambia con cada Pr. Los Nu bajaban al subir Pr.</p>
+        <div class="fix-label">Solución</div>
+        <p>Corregir en Python: Nu<sub>correcto</sub> = Nu<sub>COMSOL</sub> × k_aire / k<sub>real</sub>(Pr).</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p class="fname">FLUIDWORKS</p>
+    <p>CFD Simulation Logbook — COMSOL Multiphysics</p>
+    <p style="margin-top: 0.3rem;">Valen · 2026</p>
+  </div>
+</footer>
+
+<script>
+const nav = document.getElementById('navbar');
+window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 50); });
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
+</body>
+</html>
