@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TFG — Microcanales — FLUIDWORKS</title>
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#C45A2C">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">FLUIDWORKS</a>
+    <ul class="nav-links">
+      <li><a href="index.html#concepts">Conceptos</a></li>
+      <li><a href="project-airfoil.html">Perfil Alar</a></li>
+      <li><a href="project-tube.html">Tubo Finito</a></li>
+      <li><a href="project-flatplate.html">Placa Plana</a></li>
+      <li><a href="project-tfg.html" class="active">TFG</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="project-hero">
+  <div class="container">
+    <a href="index.html" class="back-link">&larr; Volver al logbook</a>
+    <div class="pnum">04</div>
+    <h1>Transferencia de calor con cambio de fase en microcanales</h1>
+    <p class="desc">Trabajo Fin de Grado: caracterización numérica del comportamiento térmico y fluidodinámico en un microcanal 2D axisimétrico con una burbuja esférica de vapor, bajo condiciones cuasi-estacionarias y de periodicidad. Barrido paramétrico del Péclet (10&sup2; a 10&sup7;), comparando adherencia y deslizamiento en la superficie de la burbuja.</p>
+    <div class="meta">
+      <span class="meta-chip highlight">COMSOL Multiphysics</span>
+      <span class="meta-chip highlight">Trabajo Fin de Grado</span>
+      <span class="meta-chip">2D Axisimétrico</span>
+      <span class="meta-chip">Stokes + Heat Transfer</span>
+      <span class="meta-chip">Condiciones periódicas</span>
+      <span class="meta-chip">Pe: 10&minus;2 &ndash; 10&sup7;</span>
+    </div>
+    <div class="toc">
+      <a href="#phase-a">Fase A &middot; Configuración</a>
+      <span class="sep">&middot;</span>
+      <a href="#phase-b">Fase B &middot; Verificación</a>
+      <span class="sep">&middot;</span>
+      <a href="#phase-c">Fase C &middot; No-deslizamiento</a>
+      <span class="sep">&middot;</span>
+      <a href="#phase-d">Fase D &middot; Deslizamiento</a>
+      <span class="sep">&middot;</span>
+      <a href="#phase-e">Fase E &middot; Comparativa</a>
+    </div>
+  </div>
+</div>
+
+<section style="padding-top: 2rem;">
+  <div class="container">
+
+    <div id="phase-a" class="phase fade-in">
+      <div class="phase-label">&#9654; Fase A</div>
+      <h3 class="phase-title">Configuración del modelo</h3>
+      <p class="phase-desc">Modelo 2D axisimétrico con flujo de Stokes (Re &lt;&lt; 1) acoplado a transferencia de calor. Las ecuaciones adimensionalizadas: Re&middot;u&middot;&nabla;u = &minus;&nabla;p + &nabla;&sup2;u para cantidad de movimiento y Pe&middot;u&middot;&nabla;&theta; = &nabla;&sup2;&theta; para energía.</p>
+
+      <div class="step" data-step="1">
+        <h4>Parámetros globales</h4>
+        <div class="code-block">D  = 1          // Diámetro del canal (referencia adimensional)
+L  = 2          // Longitud del canal (variable: 2, 3, 4, 6)
+RR = 0.2        // Radio de la burbuja (d = 2*RR = 0.4, 0.6, 0.8)
+Pe = 0          // Número de Péclet (barrido: 10^-2 a 10^7)</div>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Geometría: microcanal con burbuja</h4>
+        <p>Componente <strong>2D axisimétrico</strong> (coordenadas r, z). Rectángulo de anchura D/2 y altura L, menos un semicírculo de radio RR centrado en el eje. La zona gris es el dominio fluido (líquido refrigerante); la zona blanca es la burbuja de vapor. La frontera del semicírculo es la interfase líquido-vapor.</p>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Física 1: Flujo de Stokes</h4>
+        <p><span class="code-inline">Flujo laminar (spf)</span> con <strong>"Omitir inercia (flujo de Stokes)"</strong> activado. Esto fuerza Re &lt;&lt; 1, desacoplando el campo de velocidad del térmico. Variar Pe equivale a variar Pr a Re fijo. Propiedades: &rho; = 1, &mu; = 1.</p>
+        <div class="note"><strong>¿Por qué Stokes?</strong> Con Re alto, las zonas de recirculación del fluido cambian con cada Reynolds, complicando el análisis. Con Stokes (Re &rarr; 0) el campo de velocidad es único e independiente del régimen, y todo el control del régimen térmico recae en el Péclet. Además, variar Pe con Stokes equivale matemáticamente a tener Pr &gt;&gt; 1.</div>
+      </div>
+
+      <div class="step" data-step="4">
+        <h4>Física 2: Transferencia de calor en fluidos</h4>
+        <p><span class="code-inline">Transferencia de calor en fluidos (ht)</span>. Propiedades: k = 1, &rho; = 1, Cp = <span class="code-inline">Pe</span>. Al definir Cp como el Péclet, la ecuación de energía queda Pe&middot;u&middot;&nabla;&theta; = &nabla;&sup2;&theta; directamente. Los términos de disipación viscosa (Q<sub>vd</sub>), trabajo de presión (Q<sub>p</sub>) y generación interna (Q) se anulan por las hipótesis del problema.</p>
+      </div>
+
+      <div class="step" data-step="5">
+        <h4>Condiciones de contorno</h4>
+        <p><strong>Pared del microcanal (r = D/2):</strong></p>
+        <ul>
+          <li>Flujo: No deslizamiento + velocidad de traslación <span class="code-inline">&minus;V</span> (simula movimiento de la burbuja)</li>
+          <li>Temperatura: <span class="code-inline">&theta; = 0</span> (pared fría, isoterma)</li>
+        </ul>
+        <p><strong>Superficie de la burbuja:</strong></p>
+        <ul>
+          <li>Flujo: No deslizamiento (rígida) <em>o</em> Deslizamiento (libre de esfuerzos)</li>
+          <li>Temperatura: <span class="code-inline">&theta; = 1</span> (temperatura de ebullición)</li>
+        </ul>
+        <p><strong>Bordes superior e inferior:</strong></p>
+        <ul>
+          <li>Flujo: Condición periódica con diferencia de presión &Delta;P</li>
+          <li>Temperatura: Condición periódica &mdash; &theta;(x&#8407;) = &theta;(x&#8407; + Le&#8407;)</li>
+        </ul>
+        <div class="note"><strong>Periodicidad:</strong> Simula un microcanal infinito con múltiples burbujas equiespaciadas. Los campos se repiten periódicamente.</div>
+      </div>
+
+      <div class="step" data-step="6">
+        <h4>Ecuaciones globales: V y &Delta;P</h4>
+        <p>Dos Ecuaciones Globales (ODE y EDA &rarr; Ecuaciones globales):</p>
+        <ul>
+          <li><strong>V</strong>: <span class="code-inline">intop1(spf.T_stressz)</span> = 0 &mdash; itera V hasta equilibrio mecánico (fuerza neta sobre la burbuja = 0)</li>
+          <li><strong>&Delta;P</strong>: <span class="code-inline">intop2(w+V-1)</span> = 0 &mdash; itera &Delta;P hasta velocidad media adimensional = 1</li>
+        </ul>
+      </div>
+
+      <div class="step" data-step="7">
+        <h4>Mallado dictado por la física</h4>
+        <p>El tamaño de elementos cerca de la burbuja se dimensionó para resolver la capa límite térmica a Pe = 10&#8311;, donde &delta;/D = Pe&minus;1/3 &asymp; 4.6&times;10&minus;3. Capas de contorno sobre la burbuja con crecimiento progresivo; malla triangular en el dominio exterior.</p>
+      </div>
+
+      <div class="step" data-step="8">
+        <h4>Barrido paramétrico</h4>
+        <div class="code-block">Pe = 10^range(-2,1,7)    // 0.01 a 10000000</div>
+        <p>Continuación desde el último parámetro. Se repite para cada combinación de L (2, 3, 4, 6) y d (0.4, 0.6, 0.8), y para ambas condiciones de contorno.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="phase-b" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">&#9654; Fase B</div>
+      <h3 class="phase-title">Verificación del modelo</h3>
+      <p class="phase-desc">Triple verificación: hidrodinámica, termodinámica y analítica.</p>
+
+      <div class="step" data-step="1">
+        <h4>Verificación hidrodinámica</h4>
+        <p>Velocidad de arrastre V comparada con <em>Cappello, Rivero-Rodríguez et al.</em> (Journal of Fluid Mechanics, 2023). Para d = 0.4, 0.6 y 0.8, tanto en superficie rígida (bead limit, &lambda; &rarr; &infin;) como superficie móvil (bubble limit, &lambda; &rarr; 0), los valores de COMSOL coinciden con gran precisión con las curvas teórico-experimentales.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Verificación termodinámica: balance de energía</h4>
+        <p>Aplicando el Teorema del Transporte de Reynolds al volumen de control, y eliminando términos por periodicidad, impermeabilidad y régimen estacionario:</p>
+        <div class="formula">q<sub>pared</sub> + q<sub>burbuja</sub> = 0 &rarr; q<sub>pared</sub> = &minus;q<sub>burbuja</sub></div>
+        <p>Todo el calor disipado por la pared lo absorbe la burbuja. Verificado graficando ambos calores para L = 6, d = 0.8: superposición perfecta en todo el rango de Pe.</p>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Modelo analítico de conducción radial</h4>
+        <p>A Pe alto, la zona de recirculación se satura (mezclado perfecto). El calor se conduce radialmente entre r<sub>c</sub> (&theta; = 1) y la pared r = 0.5 (&theta; = 0). Ecuación de Laplace en cilíndricas:</p>
+        <div class="formula">Q = 2&pi;L / ln(0.5/r<sub>c</sub>)</div>
+        <p>Valores de r<sub>c</sub> estimados del campo de temperaturas: 0.229 (d = 0.4), 0.335 (d = 0.6), 0.430 (d = 0.8). Las líneas discontinuas horizontales de los gráficos de resultados representan estos valores asintóticos.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="phase-c" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">&#9654; Fase C</div>
+      <h3 class="phase-title">Resultados: condición de no-deslizamiento</h3>
+      <p class="phase-desc">Burbuja con superficie rígida (adherencia). El fluido se pega a la burbuja.</p>
+
+      <div class="step" data-step="1">
+        <h4>Campos de temperatura (L = 3, d = 0.4 y 0.8)</h4>
+        <p>A mayor Pe, la capa límite térmica se comprime y la zona de recirculación se satura. A mayor d, la recirculación aumenta considerablemente en ambas caras de la burbuja.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Escalado: Nu &prop; Pe&#8531;</h4>
+        <p>Con no-deslizamiento, &delta;/D = Pe&minus;&#8531;. El Nusselt es inversamente proporcional al espesor:</p>
+        <div class="formula">Nu &prop; 1/&delta; &prop; Pe&#8531;</div>
+        <p>Pendiente 1:3 confirmada en las curvas log-log. Las curvas son proporcionales a L (doble de longitud &asymp; doble de calor) y se desplazan verticalmente al aumentar d.</p>
+      </div>
+
+      <div class="results-card">
+        <h4>Resultados clave &mdash; No-deslizamiento</h4>
+        <div class="results-grid">
+          <div class="result-item"><div class="value">Pe&#8531;</div><div class="desc">Escalado del Nusselt</div></div>
+          <div class="result-item"><div class="value">Pe&minus;&#8531;</div><div class="desc">Espesor capa límite</div></div>
+          <div class="result-item"><div class="value">Q &prop; L</div><div class="desc">Proporcionalidad geom.</div></div>
+          <div class="result-item"><div class="value">No satura</div><div class="desc">Crece indefinidamente</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="phase-d" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">&#9654; Fase D</div>
+      <h3 class="phase-title">Resultados: condición de deslizamiento</h3>
+      <p class="phase-desc">Burbuja con superficie libre de esfuerzos. El fluido se desliza libremente, arrastrando más calor aguas abajo.</p>
+
+      <div class="step" data-step="1">
+        <h4>Campos de temperatura</h4>
+        <p>Mayor cantidad de fluido saturado respecto a no-deslizamiento. Las líneas de corriente que bordean la burbuja arrastran más calor, saturando la zona central más rápido.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Escalado: Nu &prop; Pe&#189; (con saturación)</h4>
+        <p>Con deslizamiento, &delta;/D = Pe&minus;&#189;:</p>
+        <div class="formula">Nu &prop; 1/&delta; &prop; Pe&#189;</div>
+        <p>Pendiente 1:2 en log-log. Pero esta tendencia se aplana a Pe &asymp; 10&#8308;: el sistema alcanza su <strong>límite geométrico de disipación</strong>. El fluido en las zonas de recirculación se satura y no puede difundir calor hacia la corriente principal.</p>
+      </div>
+
+      <div class="results-card">
+        <h4>Resultados clave &mdash; Deslizamiento</h4>
+        <div class="results-grid">
+          <div class="result-item"><div class="value">Pe&#189;</div><div class="desc">Escalado del Nusselt</div></div>
+          <div class="result-item"><div class="value">Pe&minus;&#189;</div><div class="desc">Espesor capa límite</div></div>
+          <div class="result-item"><div class="value">~10&#8308;</div><div class="desc">Pe de saturación</div></div>
+          <div class="result-item"><div class="value">Satura</div><div class="desc">Límite geométrico</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="phase-e" style="position:relative;top:-80px;"></div>
+    <div class="phase fade-in">
+      <div class="phase-label">&#9654; Fase E</div>
+      <h3 class="phase-title">Análisis comparativo</h3>
+      <p class="phase-desc">Superposición de ambas condiciones (d = 0.6, L = 6). Tres fases fluidodinámicas:</p>
+
+      <div class="step" data-step="1">
+        <h4>Fase 1 &mdash; Régimen difusivo (Pe &lt; 10)</h4>
+        <p>Ambas curvas convergen. La conducción térmica domina y la condición de contorno sobre la burbuja es irrelevante.</p>
+      </div>
+
+      <div class="step" data-step="2">
+        <h4>Fase 2 &mdash; Régimen convectivo (10 &lt; Pe &lt; 10&#8308;)</h4>
+        <p>Deslizamiento crece más rápido (Pe&#189;) que no-deslizamiento (Pe&#8531;), superándolo. El fluido libre de esfuerzos extrae calor más eficientemente de la superficie de la burbuja.</p>
+      </div>
+
+      <div class="step" data-step="3">
+        <h4>Fase 3 &mdash; Saturación y cruce (Pe &gt; 10&#8308;)</h4>
+        <p>Deslizamiento se aplana (saturación), no-deslizamiento sigue creciendo. <strong>La curva de adherencia acaba adelantando.</strong> Resultado contraintuitivo: a Péclet muy alto, la superficie rígida disipa más calor que la superficie libre.</p>
+      </div>
+
+      <div class="results-card">
+        <h4>Conclusiones del TFG</h4>
+        <p style="color: var(--text-secondary); line-height: 1.8;">A mayor longitud entre burbujas y mayor diámetro, mayor transferencia de calor. El escalado (Pe&#8531; vs Pe&#189;) se mantiene invariante frente a cambios geométricos. Las curvas de no-deslizamiento tienden al valor asintótico del modelo de conducción radial. Las limitaciones principales son: geometría esférica simplificada, ausencia de cambio de fase dinámico, y coste computacional del refinamiento a Pe &gt; 10&#8311;. Como línea futura se propone abordar el estudio con software de volumen finito (Ansys Fluent) para alcanzar regímenes más extremos.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p class="fname">FLUIDWORKS</p>
+    <p>CFD Simulation Logbook &mdash; COMSOL Multiphysics</p>
+    <p style="margin-top: 0.3rem;">Valen &middot; 2026</p>
+  </div>
+</footer>
+
+<script>
+const nav = document.getElementById('navbar');
+window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 50); });
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
+</body>
+</html>
